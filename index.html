@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Calculator</title>
+
+    <!-- Frameworks CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- Style CSS -->
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+    <div id="main">
+        <!-- AboutModal -->
+        <div class="modal fade" id="aboutModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Developed by:</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <small class="text-muted">Brian Arizmendi 2020630024</small>
+                        <br>
+                        <small class="text-muted">Frida Estrada 2020630145</small>
+                        <br>
+                        <small class="text-muted">Redes de Computadoras 2CV11, Escuela Superior de Cómputo</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary rounded" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Div -->
+        <div class="container">
+            <!-- Title -->
+            <div class="row bg-light mt-2 border rounded d-flex justify-content-center">
+                <div class="col-8 px-4 py-2 d-flex">
+                    <h6 class="display-6">IP Calculator</h6> 
+                </div>
+                <div class="col-4 px-4 py-2 d-flex align-items-center justify-content-end">
+                    <button class="btn btn-outline-primary ms-2 rounded" data-bs-toggle="modal" data-bs-target="#aboutModal">About</button>
+                </div>
+            </div>
+            
+            <!-- Inputs -->
+            <div class="row d-flex justify-content-center">
+                <div class="col-12 bg-light border rounded mt-2 px-4 py-2 d-flex justify-content-center">
+                    <div class="input-group">
+                        <!-- IP Direction Octates -->
+                        <input v-model="firstOctate" class="form-control" type="number" max="255">
+                        <span class="input-group-text">.</span>
+                        <input v-model="secondOctate" class="form-control" type="number" max="255">
+                        <span class="input-group-text">.</span>
+                        <input v-model="thirdOctate" class="form-control" type="number" max="255">
+                        <span class="input-group-text">.</span>
+                        <input v-model="fourthOctate" class="form-control" type="number" max="255">
+                        <!-- Mask -->
+                        <span class="input-group-text ms-3">/</span>
+                        <input v-model="netmask" class="form-control" type="number" placeholder="CIDR" max="32">
+                        <span class="input-group-text ms-3">Move to: /</span>
+                        <input v-model="moveTo" class="form-control" type="number" placeholder="CIDR" max="32">
+                        <button @click="computeMainInformation" class="btn btn-outline-secondary mx-3 rounded">Compute</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Main Information Div -->
+            <div class="row d-flex bg-light justify-content-center mt-2 rounded">
+
+                <!-- Left Side Information Div -->
+                <div class=" col-4 my-1 bg-light justify-content-center border-0">
+                    <div class="row d-flex justify-content-between">
+                        <div class="col border-0 rounded mt-3 mx-2 d-flex justify-content-center align-items-center">
+                            <h4 class="mb-0">Main Network</h4>
+                        </div>
+                    </div>
+                    <ul class="list-group py-2 mt-2">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Address</h6>
+                                <small class="text-muted">{{mainAddress}}</small>
+                                <br>
+                                <small class="text-muted">{{convertIpAddress(mainAddress)}}</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Netmask</h6>
+                                <small class="text-muted">{{convertIpAddress(mainNetmask)}}</small>
+                                <br>
+                                <small class="text-muted">{{mainNetmask}}</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">CISCO Wildcard Mask</h6>
+                                <small class="text-muted">{{convertIpAddress(mainWildcard)}}</small>
+                                <br>
+                                <small class="text-muted">{{mainWildcard}}</small>
+                            </div>
+                        </li>
+                        <li class="d-flex w-100">
+                            <div class="fullWidth">
+                                <span class="input-group-text">----</span>
+                            </div>
+                        </li>
+                        <li v-if="!mainRouteDiv" class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Network</h6>
+                                <small class="text-muted">{{convertIpAddress(mainNetwork)}}/{{netmask}}</small>
+                                <br>
+                                <small class="text-muted">{{mainNetwork}}</small>
+                            </div>
+                        </li>
+                        <li v-if="mainMinMaxDiv" class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Min Host</h6>
+                                <small class="text-muted">{{convertIpAddress(mainMinHost)}}</small>
+                                <br>
+                                <small class="text-muted">{{mainMinHost}}</small>
+                            </div>
+                        </li>
+                        <li v-if="mainMinMaxDiv" class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Max Host</h6>
+                                <small class="text-muted">{{convertIpAddress(mainMaxHost)}}</small>
+                                <br>
+                                <small class="text-muted">{{mainMaxHost}}</small>
+                            </div>
+                        </li>
+                        <li v-if="mainBroadcastDiv" class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Broadcast</h6>
+                                <small class="text-muted">{{convertIpAddress(mainBroadcast)}}</small>
+                                <br>
+                                <small class="text-muted">{{mainBroadcast}}</small>
+                            </div>
+                        </li>
+                        <li v-if="mainRouteDiv" class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Hostroute</h6>
+                                <small class="text-muted">{{mainAddress}}</small>
+                                <br>
+                                <small class="text-muted">{{convertIpAddress(mainAddress)}}</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Hosts/Net</h6>
+                                <small class="text-muted">{{mainHostsXNet}}</small>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">Class {{mainClass}}</h6>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Right Table Panel -->
+                <div class="overflow-auto col-8 justify-content-center">
+                    <!-- Subnets after transitions -->
+                    <div v-if="subnetDiv" class="container">
+                        <div class="row d-flex justify-content-between">
+                            <div class="col border-0 rounded mt-3 mx-2 d-flex justify-content-center align-items-center">
+                                <h4 class="mb-0">Subnets after transition from /{{netmask}} to /{{moveTo}}</h4>
+                            </div>
+                        </div>
+                        <div class="row d-flex justify-content-between">
+                            <div class="d-flex justify-content-center">
+                                <ul class="list-group  list-group-horizontal pt-1 pb-2">
+                                    <li class="list-group-item bg-light border-0 d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Netmask</h6>
+                                            <small class="text-muted">{{convertIpAddress(subnetNetmask)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{subnetNetmask}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item bg-light border-0 d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">CISCO Wildcard Mask</h6>
+                                            <small class="text-muted">{{convertIpAddress(subnetWildcard)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{subnetWildcard}}</small>
+                                        </div>
+                                    </li> 
+                                    <li class="list-group-item bg-light border-0 d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Subnets</h6>
+                                            <small class="text-muted">{{subnetNumber}}</small>
+                                        </div>
+                                    </li> 
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Supnet -->
+                    <div v-if="supnetDiv" class="container">
+                        <div class="row d-flex justify-content-between">
+                            <div class="col border-0 rounded mt-3 mx-2 d-flex justify-content-center align-items-center">
+                                <h4 class="mb-0">Supernet</h4>
+                            </div>
+                        </div>
+                        <div class="row d-flex justify-content-between mt-2">
+                            <div>
+                                <ul class="list-group pt-1 pb-2">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Netmask</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetNetmask)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetNetmask}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">CISCO Wildcard Mask</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetWildcard)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetWildcard}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Network</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetNetwork)}}/{{moveTo}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetNetwork}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Min Host</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetMinHost)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetMinHost}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Max Host</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetMaxHost)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetMaxHost}}</small>
+                                        </div>
+                                    </li>
+                                    <li v-if="supnetBroadcastDiv" class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Broadcast</h6>
+                                            <small class="text-muted">{{convertIpAddress(supnetBroadcast)}}</small>
+                                            <br>
+                                            <small class="text-muted">{{supnetBroadcast}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Hosts/Net</h6>
+                                            <small class="text-muted">{{supnetHostsXNet}}</small>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="my-0">Class {{supnetClass}}</h6>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Subnets table -->
+                    <div v-if="subnetDiv" class="row d-flex justify-content-center px-4 table-wrapper-scroll-y my-custom-scrollbar">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th v-if="!routeColumn" scope="col">Network</th>
+                                    <th v-if="!routeColumn" scope="col">Min Host</th>
+                                    <th v-if="!routeColumn" scope="col">Max Host</th>
+                                    <th v-if="broadcastColumn" scope="col">Broadcast</th>
+                                    <th v-if="broadcastColumn" scope="col">Hosts/Net</th>
+                                    <th v-if="routeColumn" scope="col">Host Route</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="subnet in subnets" :key="subnet.id">
+                                    <th scope="row">{{subnet.id}}</th>
+                                    <td v-if="!routeColumn">{{subnet.network}}/{{moveTo}}</td>
+                                    <td v-if="!routeColumn">{{subnet.minhost}}</td>
+                                    <td v-if="!routeColumn">{{subnet.maxhost}}</td>
+                                    <td v-if="broadcastColumn">{{subnet.broadcast}}</td>
+                                    <td v-if="broadcastColumn">{{subnet.hostsxnet}}</td>
+                                    <td v-if="routeColumn">{{subnet.network}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row bg-light mt-2 border rounded d-flex justify-content-center">
+                <div class="col-8 px-4 py-2 d-flex justify-content-center">
+                    <h6 class="display-6">Escuela Superior de Cómputo</h6> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frameworks Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>\
+
+    <!-- JS Scripts -->
+    <script src="js/vue.js"></script>
+
+</body>
+</html>

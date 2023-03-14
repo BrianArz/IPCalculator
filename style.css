@@ -1,0 +1,15 @@
+body{
+    background-color: rgb(176, 204, 228) !important;
+}
+.fullWidth{
+    width: 100% !important;
+}
+.my-custom-scrollbar {
+    position: relative;
+    height: 645px;
+    overflow: auto;
+    }
+.table-wrapper-scroll-y {
+    display: block;
+}
+
